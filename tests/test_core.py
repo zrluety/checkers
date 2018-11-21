@@ -1,5 +1,7 @@
 import checkers
 
+import pandas as pd
+
 from pandas import Series, DataFrame
 from pandas.testing import assert_series_equal
 
@@ -34,3 +36,20 @@ def test_find_orphans():
     assert_series_equal(
         checkers.find_orphans(dataset_a, dataset_b, fk="a_Id"), expected
     )
+
+
+def test_find_partial_dates():
+    # find_partial_dates should detect that EffectiveDate does not contain
+    # data through valuation_date while OccurrenceDate does
+
+    dataset = DataFrame(
+        {
+            "EffectiveDate": [pd.datetime(2018, 7, 1), pd.datetime(2018, 12, 15)],
+            "OccurrenceDate": [pd.datetime(2018, 9, 30), pd.datetime(2018, 12, 31)],
+        }
+    )
+    valuation_date = pd.datetime(2018, 12, 31)
+
+    expected = Series(data=[False, True], index=["EffectiveDate", "OccurrenceDate"])
+
+    assert_series_equal(checkers.find_partial_dates(dataset, valuation_date), expected)
